@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Castle Battle Reforged - Full HTML</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Fredoka',system-ui,sans-serif;background:#0a0e1a;color:#fff;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none!important}
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.15);position:relative;z-index:20;flex-wrap:wrap}
+.castle-box{flex:1;min-width:140px}
+.castle-box.right{text-align:right}
+.castle-label{font-size:11px;font-weight:700;letter-spacing:.12em;display:flex;justify-content:space-between}
+.bar{height:13px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:2px;margin-top:4px}
+.bar>div{height:100%;border-radius:999px;transition:width .3s}
+.bluebar{background:linear-gradient(90deg,#4ade80,#059669)}
+.redbar{background:linear-gradient(90deg,#f87171,#b91c1c);margin-left:auto}
+.goldwrap{display:flex;flex-direction:column;align-items:center;gap:2px}
+.gold{display:flex;align-items:center;gap:6px;background:linear-gradient(180deg,#fde047,#facc15,#eab308);color:#78350f;padding:6px 14px;border-radius:999px;border:2px solid #fef08a;font-weight:700;box-shadow:0 3px 12px rgba(234,179,8,.5);font-size:17px}
+.gold small{font-size:10px;letter-spacing:.1em}
+.level-badge{font-size:10px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.iconbtn{width:36px;height:36px;border-radius:999px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}
+.battle{position:relative;height:52vh;min-height:380px;overflow:hidden;cursor:crosshair}
+.field{position:absolute;inset:0}
+.path{position:absolute;left:0;right:0;bottom:20%;height:24%;border-top:3px solid rgba(0,0,0,.2);border-bottom:3px solid rgba(0,0,0,.2);background:rgba(141,110,99,.55)}
+.castle{position:absolute;bottom:23%;width:15%;max-width:88px;aspect-ratio:.9;z-index:5}
+.castle.blue{left:1%}
+.castle.red{right:1%}
+.castle-inner{width:100%;height:100%;border-radius:18px;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:38px;position:relative;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.castle.blue .castle-inner{background:linear-gradient(180deg,#60a5fa,#1e40af)}
+.castle.red .castle-inner{background:linear-gradient(180deg,#f87171,#991b1b)}
+.castle-hp{position:absolute;top:-22px;left:0;right:0;height:9px;background:rgba(0,0,0,.5);border-radius:999px;border:1px solid rgba(255,255,255,.3);overflow:hidden}
+.castle-hp>div{height:100%}
+.unit{position:absolute;bottom:24%;width:52px;height:64px;z-index:10;transform:translateX(-50%);transition:transform .08s}
+.unit.enemy{transform:translateX(-50%) scaleX(-1)}
+.unit .hp{position:absolute;top:-8px;left:0;right:0;height:5px;background:rgba(0,0,0,.6);border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.3);z-index:2}
+.unit .hp>div{height:100%;background:linear-gradient(90deg,#4ade80,#059669)}
+.unit svg{width:100%;height:100%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4))}
+.unit.attacking{animation:atk .18s ease}
+@keyframes atk{0%{margin-left:0}40%{margin-left:6px}100%{margin-left:0}}
+.unit.enemy.attacking{animation:atkE .18s ease}
+@keyframes atkE{0%{margin-left:0}40%{margin-left:-6px}100%{margin-left:0}}
+.unit.golem{width:68px;height:82px}
+.unit.knight{width:58px;height:72px}
+.unit.archer{width:48px;height:60px}
+.unit.mage{width:52px;height:66px}
+.unit.priest{width:50px;height:62px}
+.unit.cavalry{width:64px;height:72px}
+.unit.catapult{width:68px;height:68px}
+.arrow{position:absolute;bottom:38%;width:26px;height:6px;z-index:30;pointer-events:none}
+.dmg{position:absolute;z-index:40;font-weight:800;font-size:14px;text-shadow:0 1px 2px rgba(0,0,0,.8);pointer-events:none;transform:translateX(-50%)}
+.slash{position:absolute;top:35%;font-size:20px;z-index:15;pointer-events:none}
+.spawnbar{background:linear-gradient(180deg,#1e293b,#020617);border-top:1px solid rgba(255,255,255,.1);padding:10px}
+.ability-bar{display:flex;gap:8px;max-width:720px;margin:0 auto 10px;flex-wrap:wrap;justify-content:center}
+.ability-btn{flex:1;min-width:110px;max-width:150px;border-radius:16px;border:2px solid rgba(255,255,255,.5);padding:8px 6px;color:#fff;position:relative;overflow:hidden}
+.ability-btn:disabled{opacity:.6;filter:grayscale(.5)}
+.ability-btn .cd{position:absolute;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+.spawn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:720px;margin:0 auto}
+@media(max-width:640px){.spawn-grid{grid-template-columns:repeat(2,1fr)}}
+.spawn-btn{border-radius:18px;border:2px solid rgba(255,255,255,.7);padding:10px 4px 8px;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.spawn-btn:disabled{opacity:.55;filter:grayscale(.4)}
+.spawn-btn .emoji{font-size:26px;line-height:1}
+.spawn-btn .cost{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.3);padding:2px 8px;border-radius:999px;font-size:11px;color:#fef08a}
+.spawn-btn .stats{font-size:9px;opacity:.85;text-align:center;line-height:1.3}
+.badge-count{position:absolute;top:-8px;left:-6px;background:#fff;color:#0f172a;min-width:18px;height:18px;border-radius:999px;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.footer{display:flex;justify-content:center;gap:10px;align-items:center;padding:8px;font-size:10px;letter-spacing:.15em;color:rgba(255,255,255,.45);flex-wrap:wrap}
+.btn-small{padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700}
+.stats-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:720px;margin:8px auto 0;font-size:11px}
+.stats-bar span{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:5px 10px;border-radius:999px}
+.stats-bar b{color:#facc15}
+.overlay{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45);backdrop-filter:blur(3px)}
+.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+.card{background:linear-gradient(180deg,#1e293b,#0f172a);border:1px solid rgba(255,255,255,.15);border-radius:24px;padding:20px;width:100%;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);max-height:90vh;overflow:auto}
+.card h2{font-size:20px;line-height:1.1}
+.card p{font-size:13px;color:rgba(255,255,255,.65);margin-top:6px;line-height:1.4}
+.rows{margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:8px;font-size:12.5px}
+.bigbtn{margin-top:14px;width:100%;height:44px;border-radius:999px;background:#fff;color:#0f172a;font-weight:800;font-size:14px;border:none}
+.bigbtn.dark{background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.2)}
+.select-screen{max-width:860px;margin:0 auto;padding:16px}
+.select-head{text-align:center;margin-bottom:16px}
+.select-head h1{font-size:48px;line-height:.9}
+.select-head h1 span{background:linear-gradient(90deg,#fef08a,#fbbf24,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.level-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.level-grid{grid-template-columns:1fr}}
+.level-card{border-radius:22px;overflow:hidden;border:2px solid rgba(255,255,255,.25);background:#1e293b;text-align:left;color:#fff;position:relative}
+.level-card:disabled{opacity:.6;filter:grayscale(.4)}
+.level-top{height:110px;position:relative;padding:10px}
+.level-top .lvl{font-size:11px;background:rgba(0,0,0,.35);padding:4px 8px;border-radius:999px;display:inline-block}
+.level-top .icon{position:absolute;right:10px;bottom:8px;font-size:32px}
+.level-body{padding:12px}
+.level-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.level-stats div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:6px;font-size:11px}
+.play-label{margin-top:10px;height:36px;border-radius:999px;background:#fff;color:#0f172a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+.legend{display:flex;gap:8px;justify-content:center;margin:14px 0 6px;flex-wrap:wrap}
+.legend span{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:6px 10px;border-radius:999px;font-size:11px}
+.char-preview{display:flex;gap:12px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.char-preview div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:8px;width:150px;text-align:center}
+.char-preview svg{width:64px;height:80px}
+.upgrade-row{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px;text-align:left;margin-top:8px}
+.upgrade-row b{font-size:13px}
+.upgrade-row p{font-size:11px;margin:2px 0 0}
+.upgrade-row button{margin-left:auto;white-space:nowrap;padding:8px 12px;border-radius:999px;background:#facc15;color:#422006;font-weight:800;border:none;font-size:11px}
+.upgrade-row button:disabled{opacity:.5;filter:grayscale(.4)}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#facc15;color:#422006;padding:10px 16px;border-radius:999px;font-weight:800;font-size:13px;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+@keyframes cloud{from{transform:translateX(-120%)}to{transform:translateX(180%)}}
+.cloud{position:absolute;background:#fff;border-radius:999px;opacity:.6;animation:cloud 28s linear infinite}
+@keyframes popIn{0%{transform:scale(.86) translateY(10px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+.pop{animation:popIn .4s ease}
+@keyframes fall{from{transform:translateY(-20px)}to{transform:translateY(420px)}}
+.particle{position:absolute;top:0;z-index:2;pointer-events:none;animation:fall linear infinite}
+.progress-track{position:absolute;left:12%;right:12%;top:16%;height:6px;background:rgba(0,0,0,.4);border-radius:999px;border:1px solid rgba(255,255,255,.2);z-index:6}
+.progress-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:999px;background:#facc15;border:2px solid #fff}
+</style>
+</head>
+<body>
+<div id="toast" class="toast hidden">🏆 Achievement Unlocked!</div>
+
+<div id="selectScreen" class="select-screen">
+  <div class="select-head">
+    <div style="display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:4px 12px;border-radius:999px;font-size:11px;letter-spacing:.18em">CASTLE CRUSH - DESTROY THE ENEMY CASTLE!</div>
+    <h1 style="margin-top:12px">SELECT<br><span>KINGDOM</span></h1>
+    <p style="margin-top:8px;color:rgba(255,255,255,.6);font-size:13px;line-height:1.4;max-width:520px;margin-left:auto;margin-right:auto">Conquer 8 kingdoms! Collect gold, spawn troops, use hero abilities, destroy the red castle!<br><b style="color:#fff">Blue = Your Team (Knight) &nbsp;•&nbsp; Red = Enemy (Blindfolded)</b></p>
+    <div class="legend"><span>⭐ <span id="wonCount">0</span>/8 WINS</span><span>🌟 Stars: <b id="starCount" style="color:#facc15">0</b></span><span>🏆 High Score Endless: <b id="highScore">0</b></span><span>🔊 Sound: <button id="soundBtn" style="background:none;border:none;color:#fff;font-weight:800">ON</button></span><span><button id="shopBtn" style="background:none;border:none;color:#facc15;font-weight:800">🛒 UPGRADE SHOP</button></span><span><button id="resetBtn" style="background:none;border:none;color:#fff;font-weight:800">RESET</button></span></div>
+    <div class="char-preview">
+      <div><div id="prevBlue"></div><b style="color:#60a5fa">PLAYER TEAM - BLUE</b><p style="font-size:10px;color:rgba(255,255,255,.6)">Knight with gray helmet, blue plume, blue armor, white-cross shield, sword</p></div>
+      <div><div id="prevRed"></div><b style="color:#f87171">ENEMY TEAM - RED</b><p style="font-size:10px;color:rgba(255,255,255,.6)">Red blindfold, brown hair, red cloak, white sword</p></div>
+      <div><b style="color:#facc15">HOW TO PLAY</b><p style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.4;text-align:left">1. Earn gold +8/sec<br>2. Tap unit to spawn<br>3. Use Fireball & skills<br>4. Destroy red castle!<br>5. Earn stars to upgrade</p></div>
+    </div>
+  </div>
+  <div id="levelGrid" class="level-grid"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+    <button id="endlessCard" class="level-card" style="text-align:center;padding:18px"><div style="font-size:36px">♾️</div><h3 style="margin-top:6px">ENDLESS MODE</h3><p style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px">Survive endless waves. Enemies get stronger every wave. How long can you last?</p><div class="play-label">▶ PLAY ENDLESS</div></button>
+    <button id="shopCard" class="level-card" style="text-align:center;padding:18px"><div style="font-size:36px">🛒</div><h3 style="margin-top:6px">UPGRADE SHOP</h3><p style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px">Spend stars to boost Attack, HP, Gold, Castle HP & Skills. Permanent upgrades!</p><div class="play-label">⭐ OPEN SHOP • <span id="starCount2">0</span> STARS</div></button>
+  </div>
+  <p style="text-align:center;margin-top:14px;font-size:10px;letter-spacing:.15em;color:rgba(255,255,255,.4)">TIP: ARCHER IS GREAT FOR DESERT • GOLEM FOR FINAL • MAGE FOR GROUPS • PRIEST HEALS YOUR ARMY • CATAPULT DESTROYS CASTLES</p>
+  <div id="achieveBox" style="margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:12px;text-align:center;font-size:12px"><b>🏆 ACHIEVEMENTS:</b> <span id="achieveText">No achievements yet - win your first battle!</span></div>
+</div>
+
+<div id="gameScreen" class="hidden">
+  <div class="topbar">
+    <div class="castle-box"><div class="castle-label"><span>BLUE CASTLE</span><span id="playerHpText">1500</span></div><div class="bar"><div id="playerHpBar" class="bluebar" style="width:100%"></div></div></div>
+    <div class="goldwrap"><div class="level-badge" id="levelBadge">LEVEL 1 • ELF FOREST</div><div class="gold">🪙 <span id="goldText">250</span> <small>GOLD</small></div><div style="font-size:9px;letter-spacing:.15em;color:rgba(255,255,255,.7)">+<span id="goldRateText">8</span> /s • ENEMY +<span id="enemyRate">6</span>/s</div></div>
+    <div class="castle-box right"><div class="castle-label"><span id="bossName">FOREST GUARDIAN</span><span id="enemyHpText">1200</span></div><div class="bar"><div id="enemyHpBar" class="redbar" style="width:100%"></div></div></div>
+    <div style="display:flex;gap:6px"><button class="iconbtn" id="mapBtn" title="Levels">🗺</button><button class="iconbtn" id="speedBtn" title="Speed">1x</button><button class="iconbtn" id="autoBtn" title="Auto Spawn">🤖</button><button class="iconbtn" id="soundBtn2">🔊</button><button class="iconbtn" id="pauseBtn">⏸</button></div>
+  </div>
+  <div class="battle" id="battle">
+    <div class="field" id="fieldBg"></div>
+    <div class="cloud" style="width:110px;height:32px;top:20px;left:5%"></div>
+    <div class="cloud" style="width:140px;height:38px;top:44px;left:35%;animation-duration:35s;animation-delay:-8s"></div>
+    <div class="progress-track"><div class="progress-dot" id="progressDot" style="left:0%"></div></div>
+    <div id="particles"></div>
+    <div class="path"></div>
+    <div class="castle blue"><div class="castle-inner">🏰<div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;background:#2563eb;padding:2px 6px;border-radius:999px">BLUE</div></div><div class="castle-hp"><div id="castleBlueHp" style="width:100%;background:#22c55e"></div></div></div>
+    <div class="castle red"><div class="castle-inner">🏰<div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;background:#dc2626;padding:2px 6px;border-radius:999px">RED</div></div><div class="castle-hp"><div id="castleRedHp" style="width:100%;background:#22c55e"></div></div></div>
+    <div id="unitsLayer" style="position:absolute;inset:0"></div>
+    <div id="arrowsLayer" style="position:absolute;inset:0;pointer-events:none"></div>
+    <div id="dmgLayer" style="position:absolute;inset:0;pointer-events:none"></div>
+    <div id="targetMarker" class="hidden" style="position:absolute;width:54px;height:54px;border:3px solid #facc15;border-radius:999px;z-index:35;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(250,204,21,.8)"></div>
+    <div style="position:absolute;left:50%;top:8%;transform:translateX(-50%);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.15);padding:4px 10px;border-radius:999px;font-size:11px;letter-spacing:.18em;white-space:nowrap" id="battleSubtitle">🌳 GREEN FOREST ⚔</div>
+    <div id="waveBanner" class="hidden" style="position:absolute;left:50%;top:32%;transform:translateX(-50%);background:#0f172a;border:2px solid #facc15;padding:10px 18px;border-radius:16px;font-weight:800;z-index:45;text-align:center">WAVE 1</div>
+    <div id="tutorialOverlay" class="overlay"><div class="card pop"><div style="font-size:36px">🌳 🏰 🌳</div><h2 id="tutTitle">LEVEL 1: ELF FOREST</h2><p id="tutBoss">VS Forest Guardian</p><div class="rows" id="tutRows"></div><p id="tutCount">STARTING IN 3...</p><div style="height:6px;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden;margin-top:10px"><div id="tutBar" style="height:100%;background:linear-gradient(90deg,#facc15,#f59e0b);width:0%"></div></div></div></div>
+    <div id="pauseOverlay" class="overlay hidden"><div class="card pop"><div style="font-size:32px">⏸</div><h2>PAUSED</h2><p id="pauseLevel">Elf Forest</p><div class="rows" id="pauseStats"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="bigbtn" id="resumeBtn" style="flex:1">RESUME</button><button class="bigbtn dark" id="restartBtn2" style="flex:1">RESTART</button><button class="bigbtn dark" id="levelsBtn2" style="flex:1">LEVELS</button></div></div></div>
+    <div id="endOverlay" class="overlay hidden"><div class="card pop" id="endCard"><div style="font-size:54px" id="endEmoji">👑</div><h2 id="endTitle">LEVEL 1 COMPLETE!</h2><p id="endDesc"></p><div style="margin-top:10px;display:inline-block;background:#0f172a;color:#facc15;padding:6px 12px;border-radius:999px;font-size:11px;letter-spacing:.1em" id="endHp"></div><div class="rows" id="endStats"></div><div id="endBtns" style="margin-top:14px;display:flex;flex-direction:column;gap:8px"></div><p style="font-size:10px;letter-spacing:.18em;color:rgba(255,255,255,.4);margin-top:10px" id="endFooter"></p></div></div>
+  </div>
+  <div class="spawnbar">
+    <div class="ability-bar" id="abilityBar"></div>
+    <div class="spawn-grid" id="spawnGrid"></div>
+    <div class="stats-bar"><span>⚔ Kills: <b id="statKills">0</b></span><span>💥 Damage: <b id="statDamage">0</b></span><span>🪙 Gold Earned: <b id="statGold">0</b></span><span>🔥 Combo: <b id="statCombo">x1</b></span><span>⏱ Time: <b id="statTime">0s</b></span><span id="waveLabel" class="hidden">🌊 Wave: <b id="statWave">1</b></span></div>
+    <div class="footer"><button class="btn-small" id="restartBtn">🔄 RESTART</button><span>TAP UNIT TO SPAWN • TAP SKILL THEN TAP BATTLEFIELD FOR FIREBALL • DESTROY THE RED CASTLE!</span></div>
+  </div>
+</div>
+
+<div id="shopModal" class="modal hidden"><div class="card pop" style="max-width:480px"><div style="font-size:36px">🛒 ⭐</div><h2>UPGRADE SHOP</h2><p>Spend stars earned from victories. Upgrades are permanent!</p><div style="margin-top:8px;background:#0f172a;padding:8px;border-radius:999px">⭐ Your Stars: <b id="shopStars" style="color:#facc15">0</b></div><div id="shopList"></div><button class="bigbtn" id="closeShop">CLOSE SHOP</button></div></div>
+
+<script>
+// ---------- DATA ----------
+const UNITS=[
+ {name:"Warrior",cost:50,hp:120,dmg:22,speed:75,range:38,cooldown:0.9,bounty:25,emoji:"⚔",desc:"Balanced fighter"},
+ {name:"Archer",cost:90,hp:70,dmg:32,speed:62,range:145,cooldown:1.25,bounty:40,emoji:"🏹",desc:"Long range"},
+ {name:"Knight",cost:150,hp:260,dmg:38,speed:45,range:42,cooldown:1.35,bounty:65,emoji:"🛡",desc:"Tank + shield"},
+ {name:"Golem",cost:300,hp:620,dmg:78,speed:28,range:48,cooldown:1.9,bounty:130,emoji:"🪨",desc:"Huge tank"},
+ {name:"Mage",cost:180,hp:80,dmg:45,speed:55,range:160,cooldown:1.6,bounty:70,emoji:"🔥",desc:"AoE fireball"},
+ {name:"Priest",cost:120,hp:90,dmg:0,speed:55,range:120,cooldown:1.5,bounty:45,emoji:"💖",desc:"Heals allies"},
+ {name:"Cavalry",cost:220,hp:180,dmg:65,speed:110,range:45,cooldown:1.2,bounty:80,emoji:"🐎",desc:"Fast charge"},
+ {name:"Catapult",cost:350,hp:140,dmg:110,speed:30,range:260,cooldown:2.8,bounty:150,emoji:"💣",desc:"Siege splash"},
+];
+const LEVELS=[
+ {name:"Elf Forest",boss:"Forest Guardian",subtitle:"GREEN FOREST",icon:"🌳",bg:"linear-gradient(180deg,#0a3d1a 0%,#1b5e20 22%,#43a047 55%,#81c784 100%)",enemyHp:1200,enemyGoldRate:6,spawnBase:3.5,desc:"Elf forest guardian",tip:"Use Archer + Warrior. Mage clears groups."},
+ {name:"Scorching Dunes",boss:"Desert King",subtitle:"SCORCHING DESERT",icon:"🏜",bg:"linear-gradient(180deg,#e65100 0%,#ff9800 25%,#ffcc80 75%,#fff3e0 100%)",enemyHp:1600,enemyGoldRate:9,spawnBase:3,desc:"Endless sandstorm",tip:"Archer shines here. Keep distance!"},
+ {name:"Snowy Peak",boss:"Ice Queen",subtitle:"SNOWY PEAK",icon:"❄",bg:"linear-gradient(180deg,#0d47a1 0%,#1976d2 30%,#90caf9 65%,#e1f5fe 100%)",enemyHp:2000,enemyGoldRate:11,spawnBase:2.5,desc:"Eternal frost - boss can freeze you",tip:"Use Knight + Priest to survive freeze."},
+ {name:"Lava Crater",boss:"Lava Lord",subtitle:"VOLCANO CRATER",icon:"🌋",bg:"linear-gradient(180deg,#121212 0%,#3e2723 25%,#bf360c 60%,#ff3d00 100%)",enemyHp:2500,enemyGoldRate:14,spawnBase:2,desc:"The earth trembles - boss fireballs",tip:"Golem + Catapult break the front line."},
+ {name:"Kingdom of Darkness",boss:"Dark Emperor",subtitle:"KINGDOM OF DARKNESS",icon:"🌙",bg:"linear-gradient(180deg,#050516 0%,#0d0d2b 20%,#1a237e 55%,#311b92 100%)",enemyHp:3200,enemyGoldRate:17,spawnBase:1.5,desc:"Enemy spams troops",tip:"Mage AoE + Cavalry rush is key."},
+ {name:"Crystal Cavern",boss:"Crystal Golem",subtitle:"CRYSTAL CAVERN",icon:"💎",bg:"linear-gradient(180deg,#0f172a 0%,#312e81 30%,#7c3aed 65%,#c4b5fd 100%)",enemyHp:3800,enemyGoldRate:19,spawnBase:1.4,desc:"Crystal armor - very tanky",tip:"Catapult + Mage melt crystal armor."},
+ {name:"Storm Sky",boss:"Storm Dragon",subtitle:"STORM SKY",icon:"⛈",bg:"linear-gradient(180deg,#111827 0%,#1f2937 30%,#374151 65%,#9ca3af 100%)",enemyHp:4500,enemyGoldRate:22,spawnBase:1.2,desc:"Lightning storms everywhere",tip:"Fast Cavalry + Priest outrun storms."},
+ {name:"Eternal Throne",boss:"Shadow King - FINAL",subtitle:"ETERNAL THRONE",icon:"👑",bg:"linear-gradient(180deg,#000000 0%,#1a0000 30%,#7f1d1d 65%,#ef4444 100%)",enemyHp:5500,enemyGoldRate:25,spawnBase:1,desc:"Final boss - all enemy skills!",tip:"Use EVERYTHING. Golem front, Mage back, Catapult siege."},
+];
+const ABILITIES=[
+ {id:"fireball",name:"Fireball",emoji:"🔥",cost:80,cd:12,desc:"120 AoE damage - tap then tap battlefield"},
+ {id:"heal",name:"Heal Castle",emoji:"💚",cost:100,cd:20,desc:"+350 Castle HP"},
+ {id:"freeze",name:"Freeze",emoji:"❄",cost:70,cd:15,desc:"Freeze enemies 3s"},
+ {id:"lightning",name:"Lightning",emoji:"⚡",cost:120,cd:18,desc:"200 dmg to 3 strongest"},
+ {id:"rage",name:"Rage",emoji:"😡",cost:60,cd:15,desc:"+50% dmg & speed 8s"},
+];
+const PLAYER_X=90, ENEMY_X=910;
+let PLAYER_HP_MAX=1500;
+
+// ---------- SAVE ----------
+let unlocked=[true,false,false,false,false,false,false,false];
+let won=[false,false,false,false,false,false,false,false];
+let stars=0, highScore=0, achievements=[];
+let upgrades={attack:0,hp:0,gold:0,castle:0,skill:0};
+try{const s=JSON.parse(localStorage.getItem("castleReforgedFull_v1")||"null"); if(s){ if(s.unlocked) unlocked=s.unlocked; if(s.won) won=s.won; if(typeof s.stars==="number") stars=s.stars; if(typeof s.highScore==="number") highScore=s.highScore; if(Array.isArray(s.achievements)) achievements=s.achievements; if(s.upgrades) upgrades={...upgrades,...s.upgrades}; }}catch{}
+function save(){ try{localStorage.setItem("castleReforgedFull_v1",JSON.stringify({unlocked,won,stars,highScore,achievements,upgrades}))}catch{} }
+function showToast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.remove("hidden"); setTimeout(()=>el.classList.add("hidden"),3000); }
+function unlockAch(id,name){ if(!achievements.includes(id)){ achievements.push(id); save(); showToast("🏆 Achievement: "+name); renderLevels(); } }
+
+// ---------- SVG ----------
+function knightSVG(team, typeIdx){
+  const isBlue=team==="player";
+  const armorDark=isBlue?"#1d4ed8":"#7f1d1d";
+  const armorLight=isBlue?"#38bdf8":"#ef4444";
+  const trim=isBlue?"#facc15":"#fca5a5";
+  const scale=typeIdx===3?1.18:typeIdx===2?1.08:typeIdx===1?0.96:1;
+  let weapon="";
+  if(typeIdx===1) weapon=`<g><path d="M46 14 Q58 30 46 52" fill="none" stroke="#78350f" stroke-width="3"/><line x1="46" y1="14" x2="46" y2="52" stroke="#fff" stroke-width="1"/><circle cx="48" cy="18" r="2" fill="#facc15"/></g>`;
+  else if(typeIdx===3) weapon=`<g><rect x="48" y="6" width="6" height="38" rx="2" fill="#e5e7eb" stroke="#94a3b8"/><polygon points="48,6 54,6 51,0" fill="#e5e7eb"/><rect x="49" y="44" width="4" height="9" fill="#78350f"/></g>`;
+  else if(typeIdx===4) weapon=`<g><circle cx="51" cy="16" r="6" fill="#f97316" stroke="#facc15"/><circle cx="51" cy="16" r="2" fill="#fff"/></g>`;
+  else if(typeIdx===5) weapon=`<g><rect x="49" y="12" width="3" height="30" fill="#facc15"/><rect x="43" y="18" width="15" height="3" fill="#facc15"/></g>`;
+  else weapon=`<g><rect x="49" y="10" width="4" height="34" rx="1" fill="#f8fafc" stroke="#cbd5e1"/><polygon points="49,10 53,10 51,2" fill="#f8fafc"/><rect x="50" y="44" width="3" height="8" fill="#78350f"/></g>`;
+  let head="";
+  if(isBlue){ head=`<ellipse cx="30" cy="5" rx="4" ry="7" fill="#2563eb"/><path d="M12 30 Q12 7 30 7 Q48 7 48 30 L48 33 L12 33 Z" fill="#9ca3af" stroke="#6b7280" stroke-width="1"/><rect x="18" y="33" width="24" height="8" rx="3" fill="#ffcf9e"/><rect x="18" y="26" width="24" height="5" rx="2" fill="#111827"/>`; }
+  else { head=`<path d="M12 28 Q12 5 30 5 Q48 5 48 28 L48 20 L12 20 Z" fill="#78350f"/><rect x="16" y="20" width="28" height="16" rx="4" fill="#ffcf9e"/><rect x="12" y="24" width="36" height="10" rx="3" fill="#dc2626" stroke="#991b1b"/><path d="M44 27 L52 24 L52 29 L44 30 Z" fill="#991b1b"/>`; }
+  let shield="";
+  if(isBlue) shield=`<g><path d="M2 36 L16 36 L16 56 Q9 64 2 56 Z" fill="#1d4ed8" stroke="#fff" stroke-width="1.5"/><rect x="7" y="40" width="4" height="16" fill="#fff"/><rect x="3" y="45" width="12" height="4" fill="#fff"/></g>`;
+  else shield=`<g><path d="M2 36 L16 36 L16 56 Q9 64 2 56 Z" fill="#7f1d1d" stroke="#fca5a5" stroke-width="1.5"/><rect x="7" y="40" width="4" height="16" fill="#fecaca"/><rect x="3" y="45" width="12" height="4" fill="#fecaca"/></g>`;
+  const cape=isBlue?"":`<path d="M12 38 L48 38 L53 68 L7 68 Z" fill="#7f1d1d" opacity=".35"/>`;
+  return `<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg" style="transform:scale(${scale})"><ellipse cx="30" cy="74" rx="22" ry="4" fill="rgba(0,0,0,.25)"/>${cape}<rect x="22" y="58" width="7" height="14" rx="2" fill="${isBlue?"#1e3a8a":"#450a0a"}"/><rect x="31" y="58" width="7" height="14" rx="2" fill="${isBlue?"#1e3a8a":"#450a0a"}"/><rect x="14" y="38" width="32" height="28" rx="6" fill="${armorDark}"/><rect x="22" y="38" width="16" height="28" rx="3" fill="${armorLight}"/><circle cx="13" cy="42" r="8" fill="#cbd5e1" stroke="#94a3b8"/><circle cx="47" cy="42" r="8" fill="#cbd5e1" stroke="#94a3b8"/>${head}${weapon}${shield}</svg>`;
+}
+
+// ---------- STATE ----------
+let soundOn=true, levelIdx=0, gameState="select", isEndless=false, wave=1;
+let gold=250, enemyGold=250, playerHP=1500, enemyHP=1200;
+let units=[], arrows=[], dmgs=[], uid=1, spawnCounts=[0,0,0,0,0,0,0,0];
+let enemyTimer=2.5, goldTimer=0, enemyGoldTimer=0, tutorialTimer=2.2, lastTime=0, shake={t:0,int:0};
+let gameSpeed=1, autoSpawn=false, freezeUntil=0, rageUntil=0, bossSkillTimer=15, elapsed=0;
+let kills=0, damageDealt=0, goldEarned=0, combo=0, comboTimer=0, lastKillTime=0;
+let abilityCD={fireball:0,heal:0,freeze:0,lightning:0,rage:0};
+let pendingFireball=false, audioCtx=null;
+let castleTookDamage=false;
+
+function goldRate(){ return 8 + upgrades.gold*2; }
+function dmgMult(){ return 1 + upgrades.attack*0.15; }
+function hpMult(){ return 1 + upgrades.hp*0.2; }
+function cdMult(){ return 1 - upgrades.skill*0.1; }
+function playTone(freq,dur=0.15,type="sine",vol=0.15){ if(!soundOn) return; try{ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state!=="running") audioCtx.resume(); const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type=type; o.frequency.setValueAtTime(freq,t); o.frequency.linearRampToValueAtTime(freq*1.4,t+dur); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+dur+0.05);}catch{} }
+function playWin(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>playTone(f,0.4,"sine",0.2),i*140)) }
+function playLose(){ [392,330,294,196].forEach((f,i)=>setTimeout(()=>playTone(f,0.5,"triangle",0.18),i*220)) }
+
+// ---------- RENDER SELECT ----------
+function renderLevels(){
+  document.getElementById("wonCount").textContent=won.filter(Boolean).length;
+  document.getElementById("starCount").textContent=stars;
+  document.getElementById("starCount2").textContent=stars;
+  document.getElementById("highScore").textContent=highScore;
+  document.getElementById("prevBlue").innerHTML=knightSVG("player",0);
+  document.getElementById("prevRed").innerHTML=knightSVG("enemy",0);
+  const achNames={firstBlood:"First Blood",kills100:"100 Kills",goldRush:"Gold Rush",untouchable:"Untouchable"};
+  document.getElementById("achieveText").textContent=achievements.length? achievements.map(a=>achNames[a]||a).join(" • "):"No achievements yet - win your first battle!";
+  const grid=document.getElementById("levelGrid"); grid.innerHTML="";
+  LEVELS.forEach((lv,i)=>{
+    const btn=document.createElement("button"); btn.className="level-card"; btn.disabled=!unlocked[i];
+    btn.innerHTML=`<div class="level-top" style="background:${lv.bg}"><span class="lvl">LEVEL ${i+1}</span>${won[i]?'<span style="margin-left:6px">⭐</span>':''}<div style="font-size:11px;letter-spacing:.15em;margin-top:6px;opacity:.85">${lv.subtitle}</div><div style="font-size:16px;font-weight:800;margin-top:2px">${lv.name}</div><div style="font-size:11px;opacity:.8">${lv.boss}</div><div class="icon">${lv.icon}</div>${!unlocked[i]?'<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:28px">🔒</div>':''}</div><div class="level-body"><div style="font-size:11px;color:rgba(255,255,255,.7)">💡 ${lv.tip}</div><div class="level-stats"><div>ENEMY HP<br><b>${lv.enemyHp}</b></div><div>ENEMY GOLD<br><b style="color:#facc15">+${lv.enemyGoldRate}/s</b></div><div>AI<br><b>${lv.spawnBase<=1.2?"FIERCE":lv.spawnBase<=2?"FAST":"NORMAL"}</b></div></div><div class="play-label">${unlocked[i]?"▶ PLAY "+(won[i]?"AGAIN":""):"🔒 FINISH LEVEL "+i+" FIRST"}</div></div>`;
+    btn.onclick=()=>{ if(unlocked[i]) startLevel(i,false); };
+    grid.appendChild(btn);
+  });
+}
+function renderShop(){
+  document.getElementById("shopStars").textContent=stars;
+  const items=[
+    {key:"attack",name:"⚔ Attack Power",desc:"+15% damage for all units",lvl:upgrades.attack, max:5, cost:2},
+    {key:"hp",name:"❤ Unit HP",desc:"+20% HP for all units",lvl:upgrades.hp, max:5, cost:2},
+    {key:"gold",name:"🪙 Gold Income",desc:"+2 gold per second",lvl:upgrades.gold, max:5, cost:2},
+    {key:"castle",name:"🏰 Castle HP",desc:"+250 max castle HP",lvl:upgrades.castle, max:5, cost:3},
+    {key:"skill",name:"✨ Skill Cooldown",desc:"-10% ability cooldown",lvl:upgrades.skill, max:3, cost:3},
+  ];
+  const list=document.getElementById("shopList"); list.innerHTML="";
+  items.forEach(it=>{
+    const row=document.createElement("div"); row.className="upgrade-row";
+    row.innerHTML=`<div><b>${it.name}</b><p>${it.desc} • Level ${it.lvl}/${it.max} ${"⭐".repeat(it.lvl)}</p></div>`;
+    const b=document.createElement("button"); b.textContent=it.lvl>=it.max?"MAXED":`⭐ ${it.cost} UPGRADE`; b.disabled=it.lvl>=it.max||stars<it.cost;
+    b.onclick=()=>{ stars-=it.cost; upgrades[it.key]++; save(); renderShop(); renderLevels(); showToast("Upgraded "+it.name+"!"); playTone(900,0.2,"sine",0.2); };
+    row.appendChild(b); list.appendChild(row);
+  });
+}
+document.getElementById("resetBtn").onclick=()=>{ if(confirm("Reset all progress? This will erase stars, wins and upgrades.")){ unlocked=[true,false,false,false,false,false,false,false]; won=[false,false,false,false,false,false,false,false]; stars=0; highScore=0; achievements=[]; upgrades={attack:0,hp:0,gold:0,castle:0,skill:0}; save(); renderLevels(); } };
+function toggleSound(){ soundOn=!soundOn; document.getElementById("soundBtn").textContent=soundOn?"ON":"OFF"; document.getElementById("soundBtn2").textContent=soundOn?"🔊":"🔇"; }
+document.getElementById("soundBtn").onclick=toggleSound; document.getElementById("soundBtn2").onclick=toggleSound;
+document.getElementById("mapBtn").onclick=()=>showSelect();
+document.getElementById("pauseBtn").onclick=()=>{ if(gameState==="playing") pauseGame(); else if(gameState==="paused") resumeGame(); };
+document.getElementById("resumeBtn").onclick=resumeGame;
+document.getElementById("restartBtn").onclick=()=>startLevel(levelIdx,isEndless);
+document.getElementById("restartBtn2").onclick=()=>startLevel(levelIdx,isEndless);
+document.getElementById("levelsBtn2").onclick=()=>showSelect();
+document.getElementById("shopBtn").onclick=()=>{ renderShop(); document.getElementById("shopModal").classList.remove("hidden"); };
+document.getElementById("shopCard").onclick=()=>{ renderShop(); document.getElementById("shopModal").classList.remove("hidden"); };
+document.getElementById("closeShop").onclick=()=>document.getElementById("shopModal").classList.add("hidden");
+document.getElementById("endlessCard").onclick=()=>startLevel(0,true);
+document.getElementById("speedBtn").onclick=(e)=>{ gameSpeed=gameSpeed===1?2:1; e.target.textContent=gameSpeed+"x"; };
+document.getElementById("autoBtn").onclick=(e)=>{ autoSpawn=!autoSpawn; e.target.style.background=autoSpawn?"#facc15":""; e.target.style.color=autoSpawn?"#422006":"#fff"; };
+function showSelect(){ gameState="select"; document.getElementById("gameScreen").classList.add("hidden"); document.getElementById("selectScreen").classList.remove("hidden"); renderLevels(); }
+function pauseGame(){ gameState="paused"; document.getElementById("pauseOverlay").classList.remove("hidden"); document.getElementById("pauseLevel").textContent=(isEndless?"Endless - Wave "+wave:LEVELS[levelIdx].name); document.getElementById("pauseStats").innerHTML=`<div>⚔ Kills: ${kills}</div><div>💥 Damage: ${Math.floor(damageDealt)}</div><div>🪙 Gold Earned: ${goldEarned}</div><div>⏱ Time: ${Math.floor(elapsed)}s</div>`; }
+function resumeGame(){ gameState="playing"; document.getElementById("pauseOverlay").classList.add("hidden"); }
+
+// ---------- START ----------
+function startLevel(idx,endless){
+  levelIdx=idx; isEndless=endless; wave=1;
+  const lv=LEVELS[idx];
+  PLAYER_HP_MAX=1500+upgrades.castle*250;
+  gold=250; enemyGold=250; playerHP=PLAYER_HP_MAX;
+  enemyHP=endless? 1500 : lv.enemyHp;
+  units=[]; arrows=[]; dmgs=[]; spawnCounts=[0,0,0,0,0,0,0,0]; enemyTimer=lv.spawnBase; tutorialTimer=2.2;
+  kills=0; damageDealt=0; goldEarned=0; combo=0; elapsed=0; castleTookDamage=false; freezeUntil=0; rageUntil=0; bossSkillTimer=15;
+  abilityCD={fireball:0,heal:0,freeze:0,lightning:0,rage:0}; pendingFireball=false;
+  gameState="tutorial";
+  document.getElementById("selectScreen").classList.add("hidden");
+  document.getElementById("gameScreen").classList.remove("hidden");
+  document.getElementById("tutorialOverlay").classList.remove("hidden");
+  document.getElementById("pauseOverlay").classList.add("hidden");
+  document.getElementById("endOverlay").classList.add("hidden");
+  document.getElementById("fieldBg").style.background=lv.bg;
+  document.getElementById("levelBadge").textContent=endless?`ENDLESS • WAVE ${wave}`:`LEVEL ${idx+1} • ${lv.name.toUpperCase()}`;
+  document.getElementById("bossName").textContent=endless?"ENDLESS BOSS":lv.boss.toUpperCase();
+  document.getElementById("enemyRate").textContent=endless? 10+wave*2 : lv.enemyGoldRate;
+  document.getElementById("goldRateText").textContent=goldRate();
+  document.getElementById("battleSubtitle").textContent=endless?`♾ ENDLESS - WAVE ${wave} ⚔`:`${lv.icon} ${lv.subtitle} ⚔`;
+  document.getElementById("tutTitle").textContent=endless?`ENDLESS MODE`:`LEVEL ${idx+1}: ${lv.name.toUpperCase()}`;
+  document.getElementById("tutBoss").textContent=endless?`Survive as many waves as you can!`:`VS ${lv.boss}`;
+  document.getElementById("tutRows").innerHTML=endless?`<div>🪙 Enemy +${10+wave*2}/sec, you +${goldRate()}/sec</div><div>🌊 Wave ${wave} - Enemies get stronger each wave</div><div>🎯 Destroy the Enemy Castle to advance!</div><div>💡 ${lv.tip}</div>`:`<div>🪙 Enemy +${lv.enemyGoldRate}/sec, you +${goldRate()}/sec</div><div>🏰 Enemy HP ${lv.enemyHp} • Spawns every ${lv.spawnBase.toFixed(1)} sec</div><div>⚔ ${lv.desc}</div><div>💡 ${lv.tip}</div><div>🎯 Destroy the Enemy Castle to Win!</div>`;
+  document.getElementById("waveLabel").classList.toggle("hidden",!endless);
+  document.getElementById("tutCount").textContent=`STARTING IN ${Math.ceil(tutorialTimer)}...`;
+  spawnParticles(lv.icon);
+  renderSpawnButtons(); renderAbilities(); updateHUD();
+}
+function spawnParticles(icon){
+  const box=document.getElementById("particles"); box.innerHTML="";
+  const emojis={ "🌳":"🍃","🏜":"🏖","❄":"❄","🌋":"🔥","🌙":"✨","💎":"💎","⛈":"🌧","👑":"🔥" };
+  const e=emojis[icon]||"✨";
+  for(let i=0;i<18;i++){ const s=document.createElement("span"); s.className="particle"; s.textContent=e; s.style.left=(Math.random()*100)+"%"; s.style.fontSize=(10+Math.random()*14)+"px"; s.style.animationDuration=(3+Math.random()*4)+"s"; s.style.animationDelay=(-Math.random()*4)+"s"; box.appendChild(s); }
+}
+function renderSpawnButtons(){
+  const grid=document.getElementById("spawnGrid"); grid.innerHTML="";
+  const colors=["linear-gradient(180deg,#60a5fa,#2563eb)","linear-gradient(180deg,#4ade80,#059669)","linear-gradient(180deg,#fbbf24,#ea580c)","linear-gradient(180deg,#a78bfa,#6d28d9)","linear-gradient(180deg,#f97316,#dc2626)","linear-gradient(180deg,#f472b6,#be185d)","linear-gradient(180deg,#22d3ee,#0e7490)","linear-gradient(180deg,#94a3b8,#334155)"];
+  UNITS.forEach((u,i)=>{
+    const b=document.createElement("button"); b.className="spawn-btn"; b.style.background=colors[i];
+    const effHp=Math.floor(u.hp*hpMult()), effDmg=Math.floor(u.dmg*dmgMult());
+    b.innerHTML=`${spawnCounts[i]>0?`<span class="badge-count">${spawnCounts[i]}</span>`:''}<span class="emoji">${u.emoji}</span><span style="font-size:11px;font-weight:800">${u.name}${spawnCounts[i]>0?` x${spawnCounts[i]}`:''}</span><span class="cost">🪙 ${u.cost}</span><span class="stats">❤${effHp} ⚔${effDmg}<br>${u.desc}</span>`;
+    b.disabled=gold<u.cost;
+    b.onclick=()=>spawnUnit(i,"player");
+    grid.appendChild(b);
+  });
+}
+function renderAbilities(){
+  const bar=document.getElementById("abilityBar"); bar.innerHTML="";
+  ABILITIES.forEach(a=>{
+    const b=document.createElement("button"); b.className="ability-btn"; b.style.background=a.id==="fireball"?"linear-gradient(180deg,#f97316,#dc2626)":a.id==="heal"?"linear-gradient(180deg,#4ade80,#059669)":a.id==="freeze"?"linear-gradient(180deg,#38bdf8,#1e40af)":a.id==="lightning"?"linear-gradient(180deg,#facc15,#ea580c)":"linear-gradient(180deg,#ef4444,#991b1b)";
+    b.innerHTML=`<div style="font-size:20px">${a.emoji}</div><div style="font-size:11px;font-weight:800">${a.name}</div><div style="font-size:9px;opacity:.85">🪙 ${a.cost} • ${Math.floor(a.cd*cdMult())}s</div><div style="font-size:9px;opacity:.75">${a.desc}</div>${abilityCD[a.id]>0?`<div class="cd">${Math.ceil(abilityCD[a.id])}s</div>`:''}`;
+    b.disabled=gold<a.cost||abilityCD[a.id]>0;
+    if(a.id==="fireball"&&pendingFireball) b.style.outline="3px solid #facc15";
+    b.onclick=()=>useAbility(a.id);
+    bar.appendChild(b);
+  });
+}
+function useAbility(id){
+  const a=ABILITIES.find(x=>x.id===id);
+  if(gold<a.cost||abilityCD[id]>0) { playTone(180,0.12,"square",0.08); return; }
+  if(id==="fireball"){ pendingFireball=true; showToast("🔥 Tap the battlefield to launch Fireball!"); renderAbilities(); return; }
+  gold-=a.cost; abilityCD[id]=a.cd*cdMult();
+  if(id==="heal"){ playerHP=Math.min(PLAYER_HP_MAX,playerHP+350); addDmg(PLAYER_X+40,"+350 HP","#4ade80"); playTone(600,0.3,"sine",0.2); }
+  if(id==="freeze"){ freezeUntil=elapsed+3; addDmg(500,"❄ FROZEN!","#38bdf8",true); playTone(300,0.3,"sine",0.2); }
+  if(id==="lightning"){
+    const enemies=units.filter(u=>u.team==="enemy"&&u.hp>0).sort((x,y)=>y.hp-x.hp).slice(0,3);
+    enemies.forEach(t=>{ t.hp-=200; damageDealt+=200; addDmg(t.x,"-200 ⚡","#facc15",true); checkKill(t); });
+    playTone(1200,0.2,"square",0.2);
+  }
+  if(id==="rage"){ rageUntil=elapsed+8; addDmg(500,"😡 RAGE!","#ef4444",true); playTone(800,0.3,"sawtooth",0.2); }
+  renderAbilities(); updateHUD();
+}
+document.getElementById("battle").addEventListener("click",(e)=>{
+  if(!pendingFireball||gameState!=="playing") return;
+  const rect=e.currentTarget.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width*1000;
+  const y=(e.clientY-rect.top)/rect.height*100;
+  pendingFireball=false;
+  const a=ABILITIES[0]; gold-=a.cost; abilityCD.fireball=a.cd*cdMult();
+  document.getElementById("targetMarker").classList.remove("hidden");
+  const m=document.getElementById("targetMarker"); m.style.left=((x/1000)*100)+"%"; m.style.top=y+"%";
+  setTimeout(()=>m.classList.add("hidden"),600);
+  // AoE damage
+  let hit=0;
+  units.filter(u=>u.team==="enemy"&&Math.abs(u.x-x)<90).forEach(t=>{ t.hp-=120; damageDealt+=120; addDmg(t.x,"-120 🔥","#fb923c",true); checkKill(t); hit++; });
+  if(ENEMY_X-x<110){ enemyHP=Math.max(0,enemyHP-120); damageDealt+=120; shake={t:0.35,int:10}; addDmg(ENEMY_X-20,"-120 🔥","#ef4444",true); }
+  playTone(150,0.4,"sawtooth",0.3);
+  if(hit===0&&ENEMY_X-x>=110) showToast("Fireball missed - no enemies there!");
+  renderAbilities(); updateHUD();
+});
+function checkKill(t){
+  if(t.hp<=0){
+    const bounty=UNITS[t.typeIdx].bounty;
+    if(t.team==="enemy"){ let mult=combo>=5?2:1; let gain=bounty*mult; gold+=gain; goldEarned+=gain; kills++; combo++; lastKillTime=elapsed; addDmg(t.x,`+${gain} GOLD`,"#facc15"); playTone(1400,0.15,"sine",0.15); if(kills===1) unlockAch("firstBlood","First Blood"); if(kills>=100) unlockAch("kills100","100 Kills"); if(goldEarned>=1000) unlockAch("goldRush","Gold Rush"); }
+    else enemyGold+=bounty;
+  }
+}
+function spawnUnit(typeIdx,team){
+  const u=UNITS[typeIdx]; const isPlayer=team==="player";
+  if(isPlayer&&gold<u.cost){ playTone(180,0.12,"square",0.08); return; }
+  if(isPlayer) gold-=u.cost; else enemyGold-=u.cost;
+  const effHp=u.hp*hpMult(), effDmg=u.dmg*dmgMult();
+  const unit={id:uid++,typeIdx,team,x:isPlayer?PLAYER_X+35+Math.random()*18:ENEMY_X-35-Math.random()*18,hp:effHp,maxHp:effHp,dmg:effDmg,cooldown:0,isAttacking:false,attackAnim:0,charged:false};
+  units.push(unit); if(isPlayer) spawnCounts[typeIdx]++;
+  playTone(320,0.18,"sine",0.18); if(isPlayer&&navigator.vibrate) navigator.vibrate(20);
+  renderSpawnButtons(); updateHUD();
+}
+function addDmg(x,text,color,isCrit=false){ dmgs.push({id:uid++,x,text,color,life:1,isCrit}); }
+function updateHUD(){
+  document.getElementById("goldText").textContent=Math.floor(gold);
+  document.getElementById("playerHpText").textContent=Math.max(0,Math.floor(playerHP));
+  document.getElementById("enemyHpText").textContent=Math.max(0,Math.floor(enemyHP));
+  document.getElementById("playerHpBar").style.width=Math.max(0,playerHP/PLAYER_HP_MAX*100)+"%";
+  const maxEnemy=isEndless? 1500+ (wave-1)*800 : LEVELS[levelIdx].enemyHp;
+  document.getElementById("enemyHpBar").style.width=Math.max(0,enemyHP/maxEnemy*100)+"%";
+  document.getElementById("castleBlueHp").style.width=Math.max(0,playerHP/PLAYER_HP_MAX*100)+"%";
+  document.getElementById("castleRedHp").style.width=Math.max(0,enemyHP/maxEnemy*100)+"%";
+  document.getElementById("statKills").textContent=kills;
+  document.getElementById("statDamage").textContent=Math.floor(damageDealt);
+  document.getElementById("statGold").textContent=goldEarned;
+  document.getElementById("statCombo").textContent="x"+(combo>=5?2:1)+(combo>0?` (${combo})`:"");
+  document.getElementById("statTime").textContent=Math.floor(elapsed)+"s";
+  document.getElementById("statWave").textContent=wave;
+  if(isEndless) document.getElementById("levelBadge").textContent=`ENDLESS • WAVE ${wave}`;
+  const btns=document.querySelectorAll("#spawnGrid .spawn-btn");
+  btns.forEach((b,i)=>{ b.disabled=gold<UNITS[i].cost||gameState!=="playing"; });
+}
+function showEnd(winGame){
+  gameState=winGame?"won":"lost";
+  const lv=LEVELS[levelIdx];
+  const score=kills*100+Math.floor(damageDealt)+Math.floor(elapsed)*10;
+  if(isEndless&&score>highScore){ highScore=score; save(); }
+  if(winGame&&!castleTookDamage) unlockAch("untouchable","Untouchable");
+  const overlay=document.getElementById("endOverlay"); overlay.classList.remove("hidden");
+  document.getElementById("endEmoji").textContent=winGame?(levelIdx===7&&!isEndless?"🏆":"👑"):"💀";
+  document.getElementById("endTitle").textContent=winGame?(isEndless?`WAVE ${wave} CLEARED!`:(levelIdx===7?"LEGENDARY!":`LEVEL ${levelIdx+1} COMPLETE!`)):"DEFEAT!";
+  let starsEarned=0;
+  if(winGame){ starsEarned=playerHP/PLAYER_HP_MAX>0.8?3:playerHP/PLAYER_HP_MAX>0.5?2:1; if(!isEndless){ stars+=starsEarned; } }
+  document.getElementById("endDesc").textContent=winGame?(isEndless?`Wave ${wave} cleared! Enemies get stronger...`:(levelIdx===7?"YOU CONQUERED ALL KINGDOMS! 👑":`${lv.boss} defeated! ${lv.name} conquered!`)):`Blue castle destroyed in ${isEndless?"Endless Wave "+wave:lv.name}... Try a new strategy!`;
+  document.getElementById("endHp").textContent=winGame?`REMAINING HP ${Math.floor(playerHP)} / ${PLAYER_HP_MAX} ${!isEndless?`• +${starsEarned} ⭐`:""}`:`ENEMY REMAINING ${Math.floor(enemyHP)}`;
+  document.getElementById("endStats").innerHTML=`<div>⚔ Kills: ${kills}</div><div>💥 Damage Dealt: ${Math.floor(damageDealt)}</div><div>🪙 Gold Earned: ${goldEarned}</div><div>⏱ Time: ${Math.floor(elapsed)}s</div><div>🏆 Score: ${score}</div><div>🔥 Best Combo: ${combo}</div>`;
+  document.getElementById("endFooter").textContent=isEndless?`ENDLESS • WAVE ${wave} • HIGH SCORE ${highScore}`:`LEVEL ${levelIdx+1}/8 • ${lv.subtitle}`;
+  const btns=document.getElementById("endBtns"); btns.innerHTML="";
+  if(winGame){
+    if(isEndless){ const nb=document.createElement("button"); nb.className="bigbtn"; nb.textContent=`➡ NEXT WAVE ${wave+1}`; nb.onclick=()=>{ wave++; enemyHP=1500+(wave-1)*800; playerHP=Math.min(PLAYER_HP_MAX,playerHP+300); document.getElementById("endOverlay").classList.add("hidden"); gameState="playing"; document.getElementById("battleSubtitle").textContent=`♾ ENDLESS - WAVE ${wave} ⚔`; document.getElementById("enemyRate").textContent=10+wave*2; showWaveBanner(); }; btns.appendChild(nb); }
+    else if(levelIdx<7){ const nb=document.createElement("button"); nb.className="bigbtn dark"; nb.textContent=`➡ NEXT LEVEL • ${LEVELS[levelIdx+1].name}`; nb.onclick=()=>startLevel(levelIdx+1,false); btns.appendChild(nb); }
+    else { const d=document.createElement("div"); d.style.cssText="height:44px;border-radius:999px;background:#0f172a;color:#facc15;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:1px solid rgba(250,204,21,.4)"; d.textContent="🏆 ALL KINGDOMS CONQUERED • YOU ARE A LEGEND!"; btns.appendChild(d); }
+    const row=document.createElement("div"); row.style.display="flex"; row.style.gap="8px";
+    const b1=document.createElement("button"); b1.className="bigbtn"; b1.style.flex="1"; b1.textContent="🗺 SELECT LEVEL"; b1.onclick=()=>showSelect();
+    const b2=document.createElement("button"); b2.className="bigbtn dark"; b2.style.flex="1"; b2.textContent="🔄 PLAY AGAIN"; b2.onclick=()=>startLevel(levelIdx,isEndless);
+    row.appendChild(b1); row.appendChild(b2); btns.appendChild(row);
+    if(!isEndless){ won[levelIdx]=true; if(levelIdx<7) unlocked[levelIdx+1]=true; save(); }
+    playWin();
+  } else {
+    const row=document.createElement("div"); row.style.display="flex"; row.style.gap="8px";
+    const b1=document.createElement("button"); b1.className="bigbtn"; b1.style.flex="1"; b1.textContent="PLAY AGAIN"; b1.onclick=()=>startLevel(levelIdx,isEndless);
+    const b2=document.createElement("button"); b2.className="bigbtn dark"; b2.style.flex="1"; b2.textContent="🗺 LEVELS"; b2.onclick=()=>showSelect();
+    row.appendChild(b1); row.appendChild(b2); btns.appendChild(row);
+    playLose();
+  }
+  if(navigator.vibrate) navigator.vibrate(winGame?[50,30,50,30,100]:200);
+}
+function showWaveBanner(){ const b=document.getElementById("waveBanner"); b.textContent=`🌊 WAVE ${wave} - ENEMIES STRONGER!`; b.classList.remove("hidden"); setTimeout(()=>b.classList.add("hidden"),2000); }
+
+// ---------- LOOP ----------
+function loop(ts){
+  requestAnimationFrame(loop);
+  if(!lastTime) lastTime=ts;
+  const rawDt=Math.min(0.033,(ts-lastTime)/1000); lastTime=ts;
+  const dt=rawDt*gameSpeed;
+  if(gameState==="tutorial"){
+    tutorialTimer-=rawDt;
+    document.getElementById("tutBar").style.width=((2.2-tutorialTimer)/2.2*100)+"%";
+    document.getElementById("tutCount").textContent=`STARTING IN ${Math.max(0,Math.ceil(tutorialTimer))}...`;
+    if(tutorialTimer<=0){ gameState="playing"; document.getElementById("tutorialOverlay").classList.add("hidden"); }
+    return;
+  }
+  if(gameState!=="playing") return;
+  const lv=LEVELS[levelIdx];
+  elapsed+=dt;
+  if(elapsed-lastKillTime>10) combo=0;
+  // cooldowns
+  Object.keys(abilityCD).forEach(k=>{ if(abilityCD[k]>0) abilityCD[k]-=dt; });
+  if(Math.random()<0.05) renderAbilities();
+  goldTimer+=dt; enemyGoldTimer+=dt;
+  if(goldTimer>=1){ const add=Math.floor(goldTimer*goldRate()); if(add>0){ gold+=add; goldTimer-=add/goldRate(); } }
+  const eRate=isEndless?10+wave*2:lv.enemyGoldRate;
+  if(enemyGoldTimer>=1){ const add=Math.floor(enemyGoldTimer*eRate); if(add>0){ enemyGold+=add; enemyGoldTimer-=add/eRate; } }
+  // Auto spawn
+  if(autoSpawn&&gold>=50&&Math.random()<dt*0.5){ spawnUnit(0,"player"); }
+  // Boss skill
+  bossSkillTimer-=dt;
+  if(bossSkillTimer<=0&&enemyHP>0){
+    bossSkillTimer=15;
+    if(levelIdx===2||levelIdx===6){ freezeUntil=elapsed+1.5; addDmg(500,"❄ BOSS FREEZE!","#38bdf8",true); showToast("❄ Boss froze your army!"); }
+    else if(levelIdx===3||levelIdx===7){ playerHP=Math.max(0,playerHP-120); castleTookDamage=true; shake={t:0.35,int:10}; addDmg(PLAYER_X+40,"-120 🔥 BOSS!","#ef4444",true); showToast("🔥 Boss fireball hit your castle!"); }
+    else if(levelIdx===4||levelIdx===5){ // spawn burst
+      for(let i=0;i<2;i++) if(enemyGold>=50) spawnUnit(0,"enemy");
+      showToast("⚔ Boss summoned reinforcements!");
+    }
+  }
+  const frozen = elapsed < freezeUntil;
+  const raged = elapsed < rageUntil;
+  // Enemy AI
+  enemyTimer-=dt;
+  if(enemyTimer<=0&&enemyHP>0&&!frozen){
+    const avail=[]; if(enemyGold>=50) avail.push(0); if(enemyGold>=90) avail.push(1); if(enemyGold>=150) avail.push(2); if(enemyGold>=300) avail.push(3); if(enemyGold>=180) avail.push(4); if(enemyGold>=120) avail.push(5); if(enemyGold>=220) avail.push(6); if(enemyGold>=350) avail.push(7);
+    if(avail.length){ const pick=avail[Math.floor(Math.random()*avail.length)]; spawnUnit(pick,"enemy"); }
+    enemyTimer=lv.spawnBase+Math.random()*(isEndless?0.5:1.2);
+  }
+  units.sort((a,b)=>a.x-b.x);
+  for(let i=0;i<units.length;i++){
+    const u=units[i], cfg=UNITS[u.typeIdx];
+    if(u.cooldown>0) u.cooldown-=dt;
+    if(u.attackAnim>0) u.attackAnim-=dt*4; else u.isAttacking=false;
+    if(u.team==="player"&&frozen&&u.typeIdx!==5){ /* frozen player units still move slowly */ }
+    // Priest heal
+    if(u.typeIdx===5){
+      if(u.cooldown<=0){
+        let target=null,best=Infinity;
+        for(let j=0;j<units.length;j++){ const o=units[j]; if(o.team!==u.team||o.hp<=0||o===u) continue; if(o.hp<o.maxHp){ const d=Math.abs(o.x-u.x); if(d<=cfg.range&&d<best){ target=o; best=d; } } }
+        if(target){ target.hp=Math.min(target.maxHp,target.hp+20); addDmg(target.x,"+20 💖","#f472b6"); u.cooldown=cfg.cooldown; u.isAttacking=true; u.attackAnim=1; }
+      }
+      // priest still walks
+      let blocked=false;
+      for(let j=0;j<units.length;j++){ if(i===j) continue; const o=units[j]; if(o.team!==u.team) continue; const dx=o.x-u.x; if(u.team==="player"&&dx>0&&dx<28) blocked=true; if(u.team==="enemy"&&dx<0&&dx>-28) blocked=true; }
+      if(!blocked){ const dir=u.team==="player"?1:-1; u.x+=dir*cfg.speed*dt*(frozen&&u.team==="player"?0.3:1); u.x=Math.max(PLAYER_X+10,Math.min(ENEMY_X-10,u.x)); }
+      continue;
+    }
+    let target=null,best=Infinity;
+    for(let j=0;j<units.length;j++){ if(i===j) continue; const o=units[j]; if(o.team===u.team||o.hp<=0) continue; const dist=Math.abs(o.x-u.x); const inFront=u.team==="player"?o.x>u.x-10:o.x<u.x+10; if(!inFront) continue; if(dist<=cfg.range&&dist<best){ target=o; best=dist; } }
+    let hitCastle=false;
+    if(!target){ if(u.team==="player"&&ENEMY_X-u.x<=cfg.range+20) hitCastle=true; if(u.team==="enemy"&&u.x-PLAYER_X<=cfg.range+20) hitCastle=true; }
+    if(target||hitCastle){
+      if(u.cooldown<=0){
+        u.isAttacking=true; u.attackAnim=1; u.cooldown=cfg.cooldown;
+        let dmg=u.dmg*(raged&&u.team==="player"?1.5:1);
+        if(u.typeIdx===6&&!u.charged){ dmg*=1.8; u.charged=true; }
+        if(target){
+          if(cfg.range>70){
+            if(u.typeIdx===7){ // catapult splash handled on arrow hit
+              arrows.push({id:uid++,x:u.x,fromX:u.x,toX:target.x,team:u.team,damage:dmg,targetId:target.id,speed:280,splash:true});
+            } else if(u.typeIdx===4){ // mage AoE
+              arrows.push({id:uid++,x:u.x,fromX:u.x,toX:target.x,team:u.team,damage:dmg,targetId:target.id,speed:320,aoe:true});
+            } else {
+              arrows.push({id:uid++,x:u.x,fromX:u.x,toX:target.x,team:u.team,damage:dmg,targetId:target.id,speed:340});
+            }
+            playTone(850,0.12,"sine",0.1);
+          } else {
+            target.hp-=dmg; if(u.team==="player") damageDealt+=dmg; playTone(160,0.1,"square",0.1); addDmg(target.x,`-${Math.floor(dmg)}`,u.team==="player"?"#f87171":"#60a5fa",dmg>60); checkKill(target);
+          }
+        } else {
+          if(u.team==="player"){ enemyHP=Math.max(0,enemyHP-dmg); damageDealt+=dmg; shake={t:0.35,int:8}; playTone(80,0.3,"sawtooth",0.25); addDmg(ENEMY_X-20,`-${Math.floor(dmg)}`,"#ef4444",dmg>50); }
+          else { playerHP=Math.max(0,playerHP-dmg); castleTookDamage=true; shake={t:0.35,int:8}; playTone(80,0.3,"sawtooth",0.25); addDmg(PLAYER_X+20,`-${Math.floor(dmg)}`,"#3b82f6",dmg>50); }
+        }
+      }
+    } else {
+      let blocked=false;
+      for(let j=0;j<units.length;j++){ if(i===j) continue; const o=units[j]; if(o.team!==u.team) continue; const dx=o.x-u.x; if(u.team==="player"&&dx>0&&dx<28) blocked=true; if(u.team==="enemy"&&dx<0&&dx>-28) blocked=true; }
+      if(!blocked){ const dir=u.team==="player"?1:-1; let sp=cfg.speed*(raged&&u.team==="player"?1.5:1); if(frozen&&u.team==="enemy") sp*=0.25; if(frozen&&u.team==="player") sp*=0.5; u.x+=dir*sp*dt; u.x=Math.max(PLAYER_X+10,Math.min(ENEMY_X-10,u.x)); }
+    }
+  }
+  for(let i=arrows.length-1;i>=0;i--){
+    const a=arrows[i]; const dir=a.toX>a.fromX?1:-1; a.x+=dir*a.speed*dt;
+    if((dir===1&&a.x>=a.toX)||(dir===-1&&a.x<=a.toX)){
+      const t=units.find(x=>x.id===a.targetId);
+      if(t&&t.hp>0){
+        t.hp-=a.damage; if(a.team==="player") damageDealt+=a.damage; addDmg(t.x,`-${Math.floor(a.damage)}`,a.team==="player"?"#f87171":"#60a5fa"); playTone(200,0.08,"square",0.08); checkKill(t);
+        if(a.aoe||a.splash){ units.filter(o=>o.team!==a.team&&o.id!==t.id&&Math.abs(o.x-t.x)<70&&o.hp>0).forEach(o=>{ o.hp-=a.damage*0.6; if(a.team==="player") damageDealt+=a.damage*0.6; addDmg(o.x,`-${Math.floor(a.damage*0.6)}`,"#fb923c"); checkKill(o); }); }
+      }
+      arrows.splice(i,1);
+    }
+  }
+  units=units.filter(u=>u.hp>0);
+  dmgs.forEach(d=>d.life-=dt); dmgs=dmgs.filter(d=>d.life>0);
+  if(shake.t>0){ shake.t-=dt; if(shake.t<=0) shake={t:0,int:0}; }
+  if(playerHP<=0&&gameState==="playing"){ showEnd(false); return; }
+  else if(enemyHP<=0&&gameState==="playing"){ showEnd(true); return; }
+  const layer=document.getElementById("unitsLayer"); layer.innerHTML="";
+  const battle=document.getElementById("battle");
+  if(shake.t>0){ battle.style.transform=`translate(${(Math.random()-0.5)*shake.int}px,${(Math.random()-0.5)*shake.int}px)`; } else battle.style.transform="none";
+  // progress dot = avg player unit position
+  const playerUnits=units.filter(u=>u.team==="player");
+  if(playerUnits.length){ const avg=playerUnits.reduce((s,u)=>s+u.x,0)/playerUnits.length; document.getElementById("progressDot").style.left=((avg-PLAYER_X)/(ENEMY_X-PLAYER_X)*100)+"%"; }
+  units.forEach(u=>{
+    const cfg=UNITS[u.typeIdx];
+    const div=document.createElement("div");
+    div.className=`unit ${u.team==="enemy"?"enemy":""} ${u.typeIdx===3?"golem":u.typeIdx===2?"knight":u.typeIdx===1?"archer":u.typeIdx===4?"mage":u.typeIdx===5?"priest":u.typeIdx===6?"cavalry":u.typeIdx===7?"catapult":""} ${u.isAttacking?"attacking":""}`;
+    div.style.left=(u.x/1000*100)+"%";
+    if(elapsed<freezeUntil&&u.team==="enemy") div.style.filter="hue-rotate(180deg) brightness(1.4)";
+    if(elapsed<rageUntil&&u.team==="player") div.style.filter="drop-shadow(0 0 6px #ef4444)";
+    const hpPct=Math.max(0,u.hp/u.maxHp*100);
+    div.innerHTML=`<div class="hp"><div style="width:${hpPct}%"></div></div>${knightSVG(u.team,u.typeIdx)}${u.isAttacking&&cfg.range<70?`<div class="slash" style="${u.team==="player"?"right:-14px":"left:-14px"}">💥</div>`:""}`;
+    layer.appendChild(div);
+  });
+  const alayer=document.getElementById("arrowsLayer"); alayer.innerHTML="";
+  arrows.forEach(a=>{
+    const d=document.createElement("div"); d.className="arrow"; d.style.left=(a.x/1000*100)+"%"; d.style.transform=`translateX(-50%) rotate(${a.toX>a.fromX?15:-165}deg)`;
+    const col=a.splash?"#94a3b8":a.aoe?"#fb923c":"#fef08a";
+    d.innerHTML=`<div style="width:22px;height:4px;background:linear-gradient(90deg,${col},#f59e0b);border-radius:999px;box-shadow:0 0 6px rgba(251,191,36,.8);display:flex;align-items:center"><span style="margin-left:auto;font-size:12px">➤</span></div>`;
+    alayer.appendChild(d);
+  });
+  const dlayer=document.getElementById("dmgLayer"); dlayer.innerHTML="";
+  dmgs.forEach(d=>{
+    const el=document.createElement("div"); el.className="dmg"; el.style.left=(d.x/1000*100)+"%"; el.style.bottom=`calc(38% + ${(1-d.life)*45}px)`; el.style.opacity=d.life; el.style.color=d.color; el.style.fontSize=d.isCrit?"18px":d.text.includes("GOLD")?"13px":"14px"; el.textContent=d.text; dlayer.appendChild(el);
+  });
+  updateHUD();
+  if(Math.random()<0.08) renderSpawnButtons();
+}
+renderLevels();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
